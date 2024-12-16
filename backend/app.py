@@ -7,6 +7,8 @@ from backend.routes.users import users_bp
 from backend.routes.posts import posts_bp
 from backend.routes.tags import tags_bp
 from backend.routes.photos import photos_bp
+from flask_cors import CORS
+from routes.users import users
 
 
 UPLOAD_FOLDER = 'uploads'
@@ -19,6 +21,7 @@ def allowed_file(filename):
 def create_app():
     # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+    CORS(app)
 
     # Default configuration
     app.config.from_mapping(
@@ -56,6 +59,7 @@ def create_app():
     app.register_blueprint(posts_bp, url_prefix='/api/posts')
     app.register_blueprint(tags_bp, url_prefix='/api/tags')
     app.register_blueprint(photos_bp, url_prefix='/api/photos')
+    app.register_blueprint(users)
 
     # Simple route for testing
     @app.route('/hello')
