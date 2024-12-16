@@ -53,3 +53,7 @@ def delete_user(user_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Error deleting user', 'details': str(e)}), 500
+
+@users.route('/api/users', methods=['GET'])
+def get_users():
+    return jsonify({"users": ["Alice", "Bob", "Charlie"]}) #this is just an example list of names for now
