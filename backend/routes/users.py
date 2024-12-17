@@ -1,9 +1,12 @@
 from flask import Blueprint, request, jsonify
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import create_access_token
 from backend.models.user import User, db
 
 # Define the Blueprint for user routes
 users_bp = Blueprint('users', __name__)
+
+# ---------------- Existing Routes ----------------
 
 @users_bp.route('', methods=['GET'])
 def get_users():
@@ -54,6 +57,51 @@ def delete_user(user_id):
         db.session.rollback()
         return jsonify({'error': 'Error deleting user', 'details': str(e)}), 500
 
-@users.route('/api/users', methods=['GET'])
-def get_users():
-    return jsonify({"users": ["Alice", "Bob", "Charlie"]}) #this is just an example list of names for now
+# ---------------- New Login and Register Routes ----------------
+
+@users_bp.route('/register', methods=['POST'])
+def register_user():
+    """Register a new user."""
+    data = request.get_json()
+    if not data.get('name') or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Name, email, and password are required'}), 400
+
+    # Check if the email is already in use
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'error': 'Email already registered'}), 400
+
+    # Hash the password and create the user
+    hashed_password = generate_password_hash(data['password'])
+    new_user = User(name=data['name'], email=data['email'], password_hash=hashed_password)
+
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message': 'Registration successful'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Error during registration', 'details': str(e)}), 500
+
+@users_bp.route('/login', methods=['POST'])
+def login_user():
+    """Login a user and return an access token."""
+    data = request.get_json()
+    if not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Email and password are required'}), 400
+
+    # Validate the user's credentials
+    user = User.query.filter_by(email=data['email']).first()
+    if not user or not check_password_hash(user.password_hash, data['password']):
+        return jsonify({'error': 'Invalid email or password'}), 401
+
+    # Create an access token for the user
+    access_token = create_access_token(identity=user.id)
+    return jsonify({
+        'message': 'Login successful',
+        'access_token': access_token,
+        'user': {
+            'id': user.id,
+            'name': user.name,
+            'email': user.email
+        }
+    }), 200

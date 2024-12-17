@@ -28,9 +28,10 @@ def get_photo(photo_id):
     photo_data = {'id': photo.id, 'url': photo.url, 'post_id': photo.post_id, 'user_id': photo.user_id}
     return jsonify(photo_data)
 
-@photos_bp.route('/upload', methods=['POST'])
+@photos_bp.route('', methods=['POST'])
 def upload_photo():
     """Upload a photo and associate it with a post."""
+    # Check for file
     if 'photo' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
 
@@ -44,24 +45,41 @@ def upload_photo():
     post_id = request.form.get('post_id')
     user_id = request.form.get('user_id')
 
+    # Validate required fields
     if not post_id or not user_id:
         return jsonify({'error': 'post_id and user_id are required'}), 400
 
+    # Check if the post exists
     post = Post.query.get(post_id)
     if not post:
         return jsonify({'error': 'Post not found'}), 404
 
-    # Save the file
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
-
-    # Add photo to the database
-    new_photo = Photo(url=filepath, post_id=post_id, user_id=user_id)
     try:
+        # Secure the filename
+        filename = secure_filename(file.filename)
+
+        # Set upload folder and save file
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)  # Ensure the folder exists
+
+        filepath = os.path.join(upload_folder, filename)
+        file.save(filepath)
+
+        # Optional: Store relative path if preferred
+        relative_path = os.path.relpath(filepath, start=os.getcwd())
+
+        # Add photo to the database
+        new_photo = Photo(url=relative_path, post_id=post_id, user_id=user_id)
         db.session.add(new_photo)
         db.session.commit()
-        return jsonify({'message': 'Photo uploaded successfully!', 'photo_id': new_photo.id, 'photo_url': filepath}), 201
+
+        return jsonify({
+            'message': 'Photo uploaded successfully!',
+            'photo_id': new_photo.id,
+            'photo_url': relative_path
+        }), 201
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Error uploading photo', 'details': str(e)}), 500

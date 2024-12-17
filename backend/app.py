@@ -8,7 +8,7 @@ from backend.routes.posts import posts_bp
 from backend.routes.tags import tags_bp
 from backend.routes.photos import photos_bp
 from flask_cors import CORS
-from routes.users import users
+from flask_jwt_extended import JWTManager
 
 
 UPLOAD_FOLDER = 'uploads'
@@ -26,11 +26,14 @@ def create_app():
     # Default configuration
     app.config.from_mapping(
         SECRET_KEY='mealsonwheels',
+        JWT_SECRET_KEY = 'bananas',
         SQLALCHEMY_DATABASE_URI='sqlite:///mealdb.sqlite',
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        SQLALCHEMY_TRACK_MODIFICATIONS=True,
         DATABASE=os.path.join(app.instance_path, 'mealdb.sqlite'),
         UPLOAD_FOLDER=UPLOAD_FOLDER,
     )
+    
+    jwt = JWTManager(app)
 
     # Override configuration from a config file if it exists
     app.config.from_pyfile('config.py', silent=True)
@@ -59,32 +62,6 @@ def create_app():
     app.register_blueprint(posts_bp, url_prefix='/api/posts')
     app.register_blueprint(tags_bp, url_prefix='/api/tags')
     app.register_blueprint(photos_bp, url_prefix='/api/photos')
-    app.register_blueprint(users)
-
-    # Simple route for testing
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
-
-    @app.route('/upload', methods=['POST'])
-    def upload_photo():
-        if 'photo' not in request.files:
-            return jsonify({"error": "No file part"}), 400
-
-        file = request.files['photo']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-
-            # Add database logic here if needed
-
-            return jsonify({"message": "Photo uploaded", "photo_url": filepath}), 201
-
-        return jsonify({"error": "Invalid file type"}), 400
 
     return app
 
