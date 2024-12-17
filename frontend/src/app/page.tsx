@@ -1,7 +1,41 @@
 // app/page.tsx
-import React from 'react'
+"use client";
+import React, {useState} from 'react';
 
 const Home = () => {
+
+  const [likes, setLikes] = useState(10);
+  const [alreadyLiked, setAlreadyLiked] = useState(false);
+
+  const [dislikes, setDislikes] = useState(2)
+  const [alreadyDisliked, setAlreadyDisliked] = useState(false);
+
+
+  const handleLike = () => { 
+    if(!alreadyDisliked){
+      if(alreadyLiked) {
+        setLikes(likes-1);
+        setAlreadyLiked(false);
+      } else {
+        setLikes(likes+1);
+        setAlreadyLiked(true);
+      }
+    }
+  };
+
+  const handleDislike = () => { 
+    if(!alreadyLiked){
+      if(alreadyDisliked) {
+        setDislikes(dislikes-1);
+        setAlreadyDisliked(false);
+      } else {
+        setDislikes(dislikes+1);
+        setAlreadyDisliked(true);
+      }
+      setDislikes(dislikes+1);
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/* Left Panel */}
@@ -43,11 +77,13 @@ const Home = () => {
           {/* Interaction Buttons (Likes, Dislikes, Comments) */}
           <div className="flex justify-between text-gray-500">
             <div className="flex items-center space-x-2">
-              <button className="flex items-center">
-                👍 25
+              <button onClick={handleLike} className="flex items-center">
+                <span>👍</span> 
+                <span>{likes}</span> 
               </button>
-              <button className="flex items-center">
-                👎 3
+              <button onClick={handleDislike} className="flex items-center">
+                <span>👎</span> 
+                <span>{dislikes}</span>
               </button>
             </div>
             <button className="flex items-center">
