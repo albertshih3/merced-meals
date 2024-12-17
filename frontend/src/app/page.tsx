@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -52,7 +53,18 @@ const RoundedCard = styled(Card)({
 
 const Home = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [posts, setPosts] = useState<any[]>([]);
+  interface Post {
+    id: number;
+    user: { name: string };
+    timestamp: string;
+    image_url: string;
+    caption: string;
+    upvotes: number;
+    downvotes: number;
+    comments_count: number;
+  }
+
+  const [posts, setPosts] = useState<Post[]>([]);
   const [tags, setTags] = useState<{ name: string }[]>([]);
 
   const getUserIdFromToken = () => {
@@ -87,9 +99,25 @@ const Home = () => {
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/posts")
       .then((res) => res.json())
-      .then((data) => setPosts(data))
+      .then(async (data) => {
+        // Fetch user details for each post
+        const postsWithUser = await Promise.all(
+          data.map(async (post: Post) => {
+            try {
+              const userRes = await fetch(`http://127.0.0.1:5000/api/users/${post.user_id}`);
+              const userData = await userRes.json();
+              return { ...post, user: userData };
+            } catch (err) {
+              console.error(`Error fetching user for post ${post.id}:`, err);
+              return { ...post, user: { name: "Unknown User" } };
+            }
+          })
+        );
+        setPosts(postsWithUser);
+      })
       .catch((err) => console.error("Error fetching posts:", err));
   }, []);
+
 
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/tags")
@@ -140,21 +168,30 @@ const Home = () => {
             posts.map((post) => (
               <RoundedCard key={post.id} sx={{ marginBottom: 2 }}>
                 <CardContent>
+                  {/* User Info */}
                   <Box display="flex" alignItems="center" mb={2}>
                     <Avatar src="https://via.placeholder.com/50" />
                     <Box ml={2}>
                       <Typography variant="subtitle1">{post.user?.name || "Unknown User"}</Typography>
-                      <Typography color="textSecondary" variant="caption">
-                        {new Date(post.timestamp).toLocaleString()}
-                      </Typography>
                     </Box>
                   </Box>
+
+                  {/* Post Image */}
                   <img
                     src={post.image_url || "https://via.placeholder.com/600x400"}
                     alt="Post"
                     style={{ width: "100%", borderRadius: "12px", marginBottom: 16 }}
                   />
-                  <Typography>{post.caption}</Typography>
+
+                  {/* Title and Content */}
+                  <Typography variant="h6" gutterBottom>
+                    {post.title || "Untitled Post"}
+                  </Typography>
+                  <Typography variant="body1" color="textSecondary">
+                    {post.content || ""}
+                  </Typography>
+
+                  {/* Divider and Action Buttons */}
                   <Divider sx={{ my: 2 }} />
                   <Box display="flex" justifyContent="space-between">
                     <Button>👍 {post.upvotes}</Button>
@@ -169,6 +206,7 @@ const Home = () => {
               No posts available.
             </Typography>
           )}
+
         </ScrollableBox>
       </Box>
 
