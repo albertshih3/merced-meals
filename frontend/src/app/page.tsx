@@ -16,6 +16,7 @@ import {
 import NewPostForm from "./components/newpostform";
 import { styled } from "@mui/system";
 import { useEffectOnce } from "react-use";
+import { useRouter } from "next/navigation";
 
 interface UserProfile {
   name: string;
@@ -52,10 +53,15 @@ const RoundedCard = styled(Card)({
 });
 
 const Home = () => {
+  const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
   interface Post {
+    title: string;
+    content: string;
     id: number;
     user: { name: string };
+    user_id: number;
     timestamp: string;
     image_url: string;
     caption: string;
@@ -75,6 +81,24 @@ const Home = () => {
     }
     return null;
   };
+
+  useEffect(() => {
+    const userId = getUserIdFromToken();
+    if (!userId) {
+      console.error("No valid token found. Redirecting to login...");
+      router.push("/login"); // Redirect after a small delay
+      return;
+    }
+    setIsAuthChecked(true); // Allow component rendering after auth is checked
+    fetch(`http://127.0.0.1:5000/api/users/${userId}`)
+      .then((res) => res.json())
+      .then((data) => setUserProfile(data))
+      .catch((err) => console.error("Error fetching profile:", err));
+  }, [router]);
+
+  if (!isAuthChecked) {
+    return <p>Loading...</p>; // Render a fallback while checking auth
+  }
 
   useEffectOnce(() => {
     document.body.style.overflow = "hidden"; // Prevent body scrolling
