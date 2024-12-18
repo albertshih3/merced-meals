@@ -65,6 +65,11 @@ const Home = () => {
 
   const [interactionState, setInteractionState] = useState<{ [key: number]: "upvote" | "downvote" | null }>({});
 
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Clear token
+    router.push("/login"); // Redirect user to login
+  };
+
   const handleUpvote = (postId: number) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
@@ -176,6 +181,17 @@ const Home = () => {
             <Typography align="center" color="textSecondary">
               {userProfile?.email}
             </Typography>
+            {/* Logout Button */}
+            <Box mt={2} display="flex" justifyContent="center">
+              <Button
+                onClick={handleLogout}
+                variant="contained"
+                color="primary"
+                startIcon={<KeyboardReturnRounded />}
+              >
+                Logout
+              </Button>
+            </Box>
           </CardContent>
         </RoundedCard>
       </Box>
@@ -212,8 +228,7 @@ const Home = () => {
                   <Divider sx={{ my: 2 }} />
                   <Box display="flex" justifyContent="space-between">
                     <Button onClick={() => handleUpvote(post.id)} color={interactionState[post.id] === "upvote" ? "primary" : "default"} >👍 {post.upvotes}</Button>
-                    <Button onClick={() => handleDownvote(post.id)}
-  color={interactionState[post.id] === "downvote" ? "secondary" : "default"}>👎 {post.downvotes}</Button>
+                    <Button onClick={() => handleDownvote(post.id)} color={interactionState[post.id] === "downvote" ? "secondary" : "default"}>👎 {post.downvotes}</Button>
                   </Box>
                 </CardContent>
               </RoundedCard>
