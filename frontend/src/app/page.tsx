@@ -243,30 +243,8 @@ const Home = () => {
 
       {/* Right Column */}
       <Box width="20%" padding={2} bgcolor="#FDFEFE">
-        <RoundedCard>
-          <CardContent>
-            <Typography variant="h5" align="center" gutterBottom>
-              Tags
-            </Typography>
-            {tags.length > 0 ? (
-              tags.map((tag, index) => (
-                <Chip
-                  key={index}
-                  label={`#${tag.name}`}
-                  variant="outlined"
-                  color="primary"
-                  sx={{ margin: 0.5, borderRadius: "16px", backgroundColor: "#D6EAF8" }}
-                />
-              ))
-            ) : (
-              <Typography align="center" color="textSecondary">
-                No tags available.
-              </Typography>
-            )}
-          </CardContent>
-        </RoundedCard>
-      </Box>
       <NewPostForm />
+      </Box>
     </Box>
   );
 };
