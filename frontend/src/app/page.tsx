@@ -1,6 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import {
@@ -10,6 +11,8 @@ import {
   Typography,
   Box,
   Chip,
+  Button,
+  Divider
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { useEffectOnce } from "react-use";
@@ -43,7 +46,14 @@ const Home = () => {
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   interface Post {
+    user: { name: string; email: string };
+    image_url: string;
+    content: string;
+    upvotes: ReactNode;
+    downvotes: ReactNode;
+    comments_count: ReactNode;
     title: string;
+    id: string;
     // Add other properties of Post if needed
   }
 
@@ -129,28 +139,74 @@ const Home = () => {
         </RoundedCard>
       </Box>
 
-      <Box flexGrow={1} padding={2} display="flex" flexDirection="column">
+      {/* Center Column */}
+      <Box flexGrow={1} padding={2} display="flex" flexDirection="column" maxHeight="100vh">
         <CursiveHeader>Merced Meals</CursiveHeader>
-        <ScrollableBox>
-          {posts.map((post, index) => (
-            <RoundedCard key={index} sx={{ marginBottom: 2 }}>
-              <CardContent>
-                <Typography variant="h6">{post.title}</Typography>
-              </CardContent>
-            </RoundedCard>
-          ))}
+        <ScrollableBox flexGrow={1}>
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <RoundedCard key={post.id} sx={{ marginBottom: 2 }}>
+                <CardContent>
+                  {/* User Info */}
+                  <Box display="flex" alignItems="center" mb={2}>
+                    <Avatar src="https://via.placeholder.com/50" />
+                    <Box ml={2}>
+                      <Typography variant="subtitle1">{post.user?.name || "Unknown User"}</Typography>
+                    </Box>
+                  </Box>
+                  {/* Post Image */}
+                  <img
+                    src={post.image_url || "https://via.placeholder.com/600x400"}
+                    alt="Post"
+                    style={{ width: "100%", borderRadius: "12px", marginBottom: 16 }}
+                  />
+                  {/* Title and Content */}
+                  <Typography variant="h6" gutterBottom>
+                    {post.title || "Untitled Post"}
+                  </Typography>
+                  <Typography variant="body1" color="textSecondary">
+                    {post.content || ""}
+                  </Typography>
+                  {/* Divider and Action Buttons */}
+                  <Divider sx={{ my: 2 }} />
+                  <Box display="flex" justifyContent="space-between">
+                    <Button>👍 {post.upvotes}</Button>
+                    <Button>👎 {post.downvotes}</Button>
+                    <Button>💬 {post.comments_count} Comments</Button>
+                  </Box>
+                </CardContent>
+              </RoundedCard>
+            ))
+          ) : (
+            <Typography align="center" color="textSecondary">
+              No posts available.
+            </Typography>
+          )}
         </ScrollableBox>
       </Box>
 
-      <Box width="20%" padding={2}>
+      {/* Right Column */}
+      <Box width="20%" padding={2} bgcolor="#FDFEFE">
         <RoundedCard>
           <CardContent>
-            <Typography variant="h5" align="center">
+            <Typography variant="h5" align="center" gutterBottom>
               Tags
             </Typography>
-            {tags.map((tag, index) => (
-              <Chip key={index} label={`#${tag.name}`} />
-            ))}
+            {tags.length > 0 ? (
+              tags.map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={`#${tag.name}`}
+                  variant="outlined"
+                  color="primary"
+                  sx={{ margin: 0.5, borderRadius: "16px", backgroundColor: "#D6EAF8" }}
+                />
+              ))
+            ) : (
+              <Typography align="center" color="textSecondary">
+                No tags available.
+              </Typography>
+            )}
           </CardContent>
         </RoundedCard>
       </Box>

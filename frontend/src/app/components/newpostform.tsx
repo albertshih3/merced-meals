@@ -46,13 +46,13 @@ const NewPostForm = () => {
     setIsLoading(true);
     setError(null);
     const userId = getUserIdFromToken();
-  
+
     if (!userId) {
       setError("User not authenticated");
       setIsLoading(false);
       return;
     }
-  
+
     try {
       // First, create the post
       const postResponse = await fetch("http://127.0.0.1:5000/api/posts", {
@@ -66,40 +66,43 @@ const NewPostForm = () => {
           user_id: userId,
         }),
       });
-  
+
       if (!postResponse.ok) {
         throw new Error("Failed to create post");
       }
-  
+
       const postData = await postResponse.json();
       const postId = postData.id;
-  
+
       // If there's a selected file, upload it
       if (selectedFile) {
         const formData = new FormData();
-        formData.append("photo", selectedFile);
+        formData.append("photo", selectedFile);  // Ensure the key matches the backend ('photo')
         formData.append("post_id", postId);
         formData.append("user_id", userId);
-  
+
         const photoResponse = await fetch("http://127.0.0.1:5000/api/photos", {
           method: "POST",
           body: formData,
+          // Important: DO NOT set Content-Type header when using FormData
+          // The browser will automatically set the correct multipart/form-data boundary
         });
-  
+
+
         if (!photoResponse.ok) {
           throw new Error("Failed to upload photo");
         }
       }
-  
+
       // Reset form and close dialog
       setTitle("");
       setCaption("");
       setSelectedFile(null);
       setOpen(false);
-  
+
       // Optionally trigger a refresh of the posts list
       window.location.reload();
-  
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -167,16 +170,16 @@ const NewPostForm = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={() => setOpen(false)} 
+          <Button
+            onClick={() => setOpen(false)}
             color="secondary"
             disabled={isLoading}
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained" 
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
             color="primary"
             disabled={isLoading || !title || !caption}
           >

@@ -31,6 +31,7 @@ def get_photo(photo_id):
 @photos_bp.route('', methods=['POST'])
 def upload_photo():
     """Upload a photo and associate it with a post."""
+
     # Check for file
     if 'photo' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
