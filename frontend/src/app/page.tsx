@@ -105,11 +105,19 @@ const Home = () => {
     );
   };
 
-  const handleResetForm = () => {
-    setResetForm(true);
-    setTimeout(() => setResetForm(false), 0);
-  };
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
 
+    const response = await fetch("http://external-server.com/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+    return data.imageUrl; // Full URL of uploaded image.
+  };
+  
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
     if (token) {
