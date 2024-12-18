@@ -170,10 +170,6 @@ const Home = () => {
             <Typography variant="h5" align="center">
               Profile
             </Typography>
-            <Avatar
-              src="https://via.placeholder.com/150"
-              sx={{ width: 100, height: 100, margin: "0 auto" }}
-            />
             <Typography variant="h6" align="center">
               {userProfile?.name}
             </Typography>
@@ -218,7 +214,6 @@ const Home = () => {
                     <Button onClick={() => handleUpvote(post.id)} color={interactionState[post.id] === "upvote" ? "primary" : "default"} >👍 {post.upvotes}</Button>
                     <Button onClick={() => handleDownvote(post.id)}
   color={interactionState[post.id] === "downvote" ? "secondary" : "default"}>👎 {post.downvotes}</Button>
-                    <Button>💬 {post.comments_count} Comments</Button>
                   </Box>
                 </CardContent>
               </RoundedCard>
