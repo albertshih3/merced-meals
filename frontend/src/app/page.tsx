@@ -106,11 +106,19 @@ const Home = () => {
     );
   };
 
-  const handleResetForm = () => {
-    setResetForm(true);
-    setTimeout(() => setResetForm(false), 0);
-  };
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
 
+    const response = await fetch("http://external-server.com/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+    return data.imageUrl; // Full URL of uploaded image.
+  };
+  
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -213,10 +221,11 @@ const Home = () => {
                   </Box>
                   {/* Post Image */}
                   <img
-                    src={post.image_url || "https://via.placeholder.com/600x400"}
-                    alt="Post"
-                    style={{ width: "100%", borderRadius: "12px", marginBottom: 16 }}
-                  />
+                      src={`http://127.0.0.1:5000${post.image_url}`}
+                      alt="Uploaded Post"
+                      style={{ width: "100%", borderRadius: "12px", marginBottom: 16 }}
+                    />
+
                   {/* Title and Content */}
                   <Typography variant="h6" gutterBottom>
                     {post.title || "Untitled Post"}
