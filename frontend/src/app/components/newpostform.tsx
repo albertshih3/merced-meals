@@ -87,15 +87,13 @@ const NewPostForm = () => {
       // If there's a selected file, upload it
       if (selectedFile) {
         const formData = new FormData();
-        formData.append("photo", selectedFile);  // Ensure the key matches the backend ('photo')
+        formData.append("photo", selectedFile);
         formData.append("post_id", postId);
         formData.append("user_id", userId);
 
         const photoResponse = await fetch("http://127.0.0.1:5000/api/photos", {
           method: "POST",
           body: formData,
-          // Important: DO NOT set Content-Type header when using FormData
-          // The browser will automatically set the correct multipart/form-data boundary
         });
 
 
