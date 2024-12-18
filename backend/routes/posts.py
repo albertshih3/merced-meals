@@ -49,7 +49,16 @@ def create_post():
     try:
         db.session.add(new_post)
         db.session.commit()
-        return jsonify({'message': 'Post created successfully!'}), 201
+        return jsonify({
+            'message': 'Post created successfully!',
+            'id': new_post.id,  # Return the ID of the newly created post
+            'data': {
+                'id': new_post.id,
+                'title': new_post.title,
+                'content': new_post.content,
+                'user_id': new_post.user_id
+            }
+        }), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Error creating post', 'details': str(e)}), 500

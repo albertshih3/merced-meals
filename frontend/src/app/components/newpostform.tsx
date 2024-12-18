@@ -34,7 +34,28 @@ const NewPostForm = () => {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      const fileName = file.name;
+      
+      // If a file is already selected, modify the filename
+      if (selectedFile) {
+        const nameParts = fileName.split('.');
+        const extension = nameParts.pop();
+        const baseFileName = nameParts.join('.');
+        
+        const newFileName = `${baseFileName}_${Date.now()}.${extension}`;
+        
+        // Create a new File object with a unique name
+        const uniqueFile = new File([file], newFileName, {
+          type: file.type,
+          lastModified: file.lastModified
+        });
+        
+        setSelectedFile(uniqueFile);
+      } else {
+        // First file selection remains unchanged
+        setSelectedFile(file);
+      }
     }
   };
 
@@ -55,20 +76,21 @@ const NewPostForm = () => {
   const handleSubmit = async () => {
     setIsLoading(true);
     setError(null);
+  
     const userId = getUserIdFromToken();
-
     if (!userId) {
       setError("User not authenticated");
       setIsLoading(false);
       return;
     }
-
+  
     try {
-      // First, create the post
+      // Step 1: Create the post
       const postResponse = await fetch("http://127.0.0.1:5000/api/posts", {
         method: "POST",
-        headers: {
+        headers: { 
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
         body: JSON.stringify({
           title: title,
@@ -76,42 +98,51 @@ const NewPostForm = () => {
           user_id: userId,
         }),
       });
-
-      if (!postResponse.ok) {
-        throw new Error("Failed to create post");
-      }
-
+  
       const postData = await postResponse.json();
-      const postId = postData.id;
-
-      // If there's a selected file, upload it
+      const postId = postData.id || postData.post_id || (postData.data && postData.data.id);
+  
+      console.log("Post Creation Response:", postData);
+      console.log("Extracted Post ID:", postId);
+  
+      // Step 2: Upload the photo if a file is selected
       if (selectedFile) {
         const formData = new FormData();
         formData.append("photo", selectedFile);
-        formData.append("post_id", postId);
+        formData.append("post_id", postId.toString());
         formData.append("user_id", userId);
-
+  
+        console.log("FormData contents:");
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}: ${value}`);
+        }
+  
         const photoResponse = await fetch("http://127.0.0.1:5000/api/photos", {
           method: "POST",
+          // DO NOT set Content-Type header for FormData
           body: formData,
         });
-
-
+  
+        console.log("Photo Upload Response Status:", photoResponse.status);
+        const photoResponseText = await photoResponse.text();
+        console.log("Photo Upload Response Text:", photoResponseText);
+  
         if (!photoResponse.ok) {
-          throw new Error("Failed to upload photo");
+          throw new Error(`Photo upload failed. Status: ${photoResponse.status}, Response: ${photoResponseText}`);
         }
+  
+        console.log("Photo uploaded successfully");
       }
-
+  
       // Reset form and close dialog
       setTitle("");
       setCaption("");
       setSelectedFile(null);
       setOpen(false);
-
-      // Optionally trigger a refresh of the posts list
+  
       window.location.reload();
-
     } catch (err) {
+      console.error("Full error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
