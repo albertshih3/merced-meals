@@ -48,14 +48,13 @@ const Home = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   interface Post {
     user: { name: string; email: string };
-    image_url: string;
+    image_url: string | null;
     content: string;
     upvotes: ReactNode;
     downvotes: ReactNode;
     comments_count: ReactNode;
     title: string;
     id: string;
-    // Add other properties of Post if needed
   }
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -73,17 +72,17 @@ const Home = () => {
   const handleUpvote = (postId: number) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
-        if(post.id === postId){
-          if(interactionState[postId] === "upvote" ) {
+        if (post.id === postId) {
+          if (interactionState[postId] === "upvote") {
 
-            setInteractionState((prev) => ({ ...prev, [postId]: null}));
+            setInteractionState((prev) => ({ ...prev, [postId]: null }));
             return { ...post, upvotes: post.upvotes - 1 };
           } else {
-            setInteractionState((prev) => ({ ...prev, [postId]: "upvote"}));
+            setInteractionState((prev) => ({ ...prev, [postId]: "upvote" }));
             return { ...post, upvotes: post.upvotes + 1, downvotes: interactionState[postId] === "downvote" ? post.downvotes - 1 : post.downvotes };
           }
         }
-       return post; 
+        return post;
       })
     );
   };
@@ -91,17 +90,17 @@ const Home = () => {
   const handleDownvote = (postId: number) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
-        if(post.id === postId){
-          if(interactionState[postId] === "downvote" ) {
+        if (post.id === postId) {
+          if (interactionState[postId] === "downvote") {
 
-            setInteractionState((prev) => ({ ...prev, [postId]: null}));
+            setInteractionState((prev) => ({ ...prev, [postId]: null }));
             return { ...post, downvotes: post.downvotes - 1 };
           } else {
-            setInteractionState((prev) => ({ ...prev, [postId]: "downvote"}));
+            setInteractionState((prev) => ({ ...prev, [postId]: "downvote" }));
             return { ...post, downvotes: post.downvotes + 1, upvotes: interactionState[postId] === "upvote" ? post.upvotes - 1 : post.upvotes };
           }
         }
-       return post; 
+        return post;
       })
     );
   };
@@ -212,11 +211,23 @@ const Home = () => {
                     </Box>
                   </Box>
                   {/* Post Image */}
-                  <img
-                    src={post.image_url || "https://via.placeholder.com/600x400"}
-                    alt="Post"
-                    style={{ width: "100%", borderRadius: "12px", marginBottom: 16 }}
-                  />
+                  {post.image_url ? (
+                    <img
+                      src={`http://127.0.0.1:5000${post.image_url}`}
+                      alt={post.title}
+                      style={{ width: "100%", borderRadius: "12px", marginBottom: 16 }}
+                      onError={(e) => {
+                        console.error('Error loading image:', post.image_url);
+                        e.currentTarget.src = "https://via.placeholder.com/600x400";
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src="https://via.placeholder.com/600x400"
+                      alt="Default post"
+                      style={{ width: "100%", borderRadius: "12px", marginBottom: 16 }}
+                    />
+                  )}
                   {/* Title and Content */}
                   <Typography variant="h6" gutterBottom>
                     {post.title || "Untitled Post"}
@@ -243,7 +254,7 @@ const Home = () => {
 
       {/* Right Column */}
       <Box width="20%" padding={2} bgcolor="#FDFEFE">
-      <NewPostForm />
+        <NewPostForm />
       </Box>
     </Box>
   );

@@ -1,21 +1,37 @@
 from flask import Blueprint, request, jsonify
 from backend.models.posts import Post, db
+from backend.models.user import User  # Add this import
+from backend.models.photo import Photo
 
 # Define the Blueprint for post routes
 posts_bp = Blueprint('posts', __name__)
 
 @posts_bp.route('', methods=['GET'])
 def get_posts():
-    """Retrieve all posts."""
+    """Retrieve all posts with their associated photos and user information."""
     posts = Post.query.all()
-    posts_list = [{
-        'id': post.id,
-        'title': post.title,
-        'content': post.content,
-        'upvotes': post.upvotes,
-        'downvotes': post.downvotes,
-        'user_id': post.user_id
-    } for post in posts]
+    posts_list = []
+    
+    for post in posts:
+        # Get the associated photo
+        photo = Photo.query.filter_by(post_id=post.id).first()
+        # Get the user information
+        user = User.query.get(post.user_id)
+        
+        post_dict = {
+            'id': post.id,
+            'title': post.title,
+            'content': post.content,
+            'upvotes': post.upvotes,
+            'downvotes': post.downvotes,
+            'user': {
+                'name': user.name if user else 'Unknown',
+                'email': user.email if user else ''
+            },
+            'image_url': f'/api/photos/file/{photo.url}' if photo else None
+        }
+        posts_list.append(post_dict)
+    
     return jsonify(posts_list)
 
 @posts_bp.route('/<int:post_id>', methods=['GET'])

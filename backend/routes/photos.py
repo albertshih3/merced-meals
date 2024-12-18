@@ -1,12 +1,22 @@
-import os
-from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 from backend.models.photo import Photo, db
 from backend.models.posts import Post
+from flask import Blueprint, request, jsonify, current_app, send_file
+import os
 
 photos_bp = Blueprint('photos', __name__)
 
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+@photos_bp.route('/file/<path:filename>')
+def serve_photo(filename):
+    """Serve photo files from the upload directory."""
+    try:
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+        return send_file(os.path.join(upload_folder, filename))
+    except Exception as e:
+        return jsonify({'error': 'Photo not found'}), 404
 
 def allowed_file(filename):
     """Check if the uploaded file has an allowed extension."""
@@ -31,8 +41,6 @@ def get_photo(photo_id):
 @photos_bp.route('', methods=['POST'])
 def upload_photo():
     """Upload a photo and associate it with a post."""
-
-    # Check for file
     if 'photo' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
 
@@ -46,39 +54,33 @@ def upload_photo():
     post_id = request.form.get('post_id')
     user_id = request.form.get('user_id')
 
-    # Validate required fields
     if not post_id or not user_id:
         return jsonify({'error': 'post_id and user_id are required'}), 400
 
-    # Check if the post exists
-    post = Post.query.get(post_id)
-    if not post:
-        return jsonify({'error': 'Post not found'}), 404
-
     try:
-        # Secure the filename
-        filename = secure_filename(file.filename)
-
-        # Set upload folder and save file
+        # Generate a unique filename to prevent conflicts
+        filename = secure_filename(f"{post_id}_{file.filename}")
+        
+        # Save file to uploads directory
         upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
         if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder)  # Ensure the folder exists
+            os.makedirs(upload_folder)
 
-        filepath = os.path.join(upload_folder, filename)
-        file.save(filepath)
+        file.save(os.path.join(upload_folder, filename))
 
-        # Optional: Store relative path if preferred
-        relative_path = os.path.relpath(filepath, start=os.getcwd())
-
-        # Add photo to the database
-        new_photo = Photo(url=relative_path, post_id=post_id, user_id=user_id)
+        # Create photo record in database
+        new_photo = Photo(
+            url=filename,  # Store just the filename
+            post_id=post_id,
+            user_id=user_id
+        )
         db.session.add(new_photo)
         db.session.commit()
 
         return jsonify({
             'message': 'Photo uploaded successfully!',
             'photo_id': new_photo.id,
-            'photo_url': relative_path
+            'photo_url': f'/api/photos/file/{filename}'
         }), 201
 
     except Exception as e:
