@@ -66,5 +66,6 @@ def create_app():
     return app
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Get the port from the environment variable or default to 5000
     app = create_app()
     app.run(debug=True)
