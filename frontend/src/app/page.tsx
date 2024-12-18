@@ -16,6 +16,7 @@ import {
 import NewPostForm from "./components/newpostform";
 import { styled } from "@mui/system";
 import { useEffectOnce } from "react-use";
+import { KeyboardReturnRounded } from "@mui/icons-material";
 
 interface UserProfile {
   name: string;
@@ -66,6 +67,50 @@ const Home = () => {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [tags, setTags] = useState<{ name: string }[]>([]);
+  const [resetForm, setResetForm] = useState(false);
+
+  const [interactionState, setInteractionState] = useState<{ [key: number]: "upvote" | "downvote" | null }>({});
+
+  const handleUpvote = (postId: number) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if(post.id === postId){
+          if(interactionState[postId] === "upvote" ) {
+
+            setInteractionState((prev) => ({ ...prev, [postId]: null}));
+            return { ...post, upvotes: post.upvotes - 1 };
+          } else {
+            setInteractionState((prev) => ({ ...prev, [postId]: "upvote"}));
+            return { ...post, upvotes: post.upvotes + 1, downvotes: interactionState[postId] === "downvote" ? post.downvotes - 1 : post.downvotes };
+          }
+        }
+       return post; 
+      })
+    );
+  };
+
+  const handleDownvote = (postId: number) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if(post.id === postId){
+          if(interactionState[postId] === "downvote" ) {
+
+            setInteractionState((prev) => ({ ...prev, [postId]: null}));
+            return { ...post, downvotes: post.downvotes - 1 };
+          } else {
+            setInteractionState((prev) => ({ ...prev, [postId]: "downvote"}));
+            return { ...post, downvotes: post.downvotes + 1, upvotes: interactionState[postId] === "upvote" ? post.upvotes - 1 : post.upvotes };
+          }
+        }
+       return post; 
+      })
+    );
+  };
+
+  const handleResetForm = () => {
+    setResetForm(true);
+    setTimeout(() => setResetForm(false), 0);
+  };
 
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
@@ -194,8 +239,10 @@ const Home = () => {
                   {/* Divider and Action Buttons */}
                   <Divider sx={{ my: 2 }} />
                   <Box display="flex" justifyContent="space-between">
-                    <Button>👍 {post.upvotes}</Button>
-                    <Button>👎 {post.downvotes}</Button>
+                    <Button onClick={() => handleUpvote(post.id)}
+                    color="primary" disabled={interactionState[post.id] === "downvote"}>👍 {post.upvotes}</Button>
+                    <Button onClick={() => handleDownvote(post.id)}
+                    color="secondary" disabled={interactionState[post.id] === "upvote"} >👎 {post.downvotes}</Button>
                     <Button>💬 {post.comments_count} Comments</Button>
                   </Box>
                 </CardContent>
