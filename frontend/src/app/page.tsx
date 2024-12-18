@@ -68,22 +68,17 @@ const Home = () => {
   const handleUpvote = (postId: number) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
-        if (post.id === postId) {
-          if (interactionState[postId] === "upvote") {
-            // Undo upvote
-            setInteractionState((prev) => ({ ...prev, [postId]: null }));
+        if(post.id === postId){
+          if(interactionState[postId] === "upvote" ) {
+
+            setInteractionState((prev) => ({ ...prev, [postId]: null}));
             return { ...post, upvotes: post.upvotes - 1 };
           } else {
-            // Do an upvote
-            setInteractionState((prev) => ({ ...prev, [postId]: "upvote" }));
-            return {
-              ...post,
-              upvotes: post.upvotes + 1,
-              downvotes: interactionState[postId] === "downvote" ? post.downvotes - 1 : post.downvotes,
-            };
+            setInteractionState((prev) => ({ ...prev, [postId]: "upvote"}));
+            return { ...post, upvotes: post.upvotes + 1, downvotes: interactionState[postId] === "downvote" ? post.downvotes - 1 : post.downvotes };
           }
         }
-        return post;
+       return post; 
       })
     );
   };
@@ -91,22 +86,17 @@ const Home = () => {
   const handleDownvote = (postId: number) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
-        if (post.id === postId) {
-          if (interactionState[postId] === "downvote") {
-            // Undo downvote
-            setInteractionState((prev) => ({ ...prev, [postId]: null }));
+        if(post.id === postId){
+          if(interactionState[postId] === "downvote" ) {
+
+            setInteractionState((prev) => ({ ...prev, [postId]: null}));
             return { ...post, downvotes: post.downvotes - 1 };
           } else {
-            // Do a downvote
-            setInteractionState((prev) => ({ ...prev, [postId]: "downvote" }));
-            return {
-              ...post,
-              downvotes: post.downvotes + 1,
-              upvotes: interactionState[postId] === "upvote" ? post.upvotes - 1 : post.upvotes,
-            };
+            setInteractionState((prev) => ({ ...prev, [postId]: "downvote"}));
+            return { ...post, downvotes: post.downvotes + 1, upvotes: interactionState[postId] === "upvote" ? post.upvotes - 1 : post.upvotes };
           }
         }
-        return post;
+       return post; 
       })
     );
   };
@@ -180,6 +170,10 @@ const Home = () => {
             <Typography variant="h5" align="center">
               Profile
             </Typography>
+            <Avatar
+              src="https://via.placeholder.com/150"
+              sx={{ width: 100, height: 100, margin: "0 auto" }}
+            />
             <Typography variant="h6" align="center">
               {userProfile?.name}
             </Typography>
@@ -222,7 +216,9 @@ const Home = () => {
                   <Divider sx={{ my: 2 }} />
                   <Box display="flex" justifyContent="space-between">
                     <Button onClick={() => handleUpvote(post.id)} color={interactionState[post.id] === "upvote" ? "primary" : "default"} >👍 {post.upvotes}</Button>
-                    <Button onClick={() => handleDownvote(post.id)} color={interactionState[post.id] === "downvote" ? "secondary" : "default"} >👎 {post.downvotes}</Button>
+                    <Button onClick={() => handleDownvote(post.id)}
+  color={interactionState[post.id] === "downvote" ? "secondary" : "default"}>👎 {post.downvotes}</Button>
+                    <Button>💬 {post.comments_count} Comments</Button>
                   </Box>
                 </CardContent>
               </RoundedCard>
